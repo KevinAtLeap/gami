@@ -115,3 +115,4 @@ EVENT ID          | TYPE TEST
 *RTPReceiverStats* | YES
 *RTPSenderStats* | YES
 *Bridge* | YES
+*CEL* | YES
