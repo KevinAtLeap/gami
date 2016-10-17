@@ -14,7 +14,7 @@ type ChannelEventLog struct {
 	Application   string `AMI:"Application"`
 	AppData       string `AMI:"AppData"`
 	EventTime     string `AMI:"EventTime"`
-	AMAFlags      string `AMI:"AMAFlags"`
+	AMAFlags      int64  `AMI:"AMAFlags"`
 	UniqueID      string `AMI:"UniqueID"`
 	LinkedID      string `AMI:"LinkedID"`
 	UserField     string `AMI:"UserField"`
