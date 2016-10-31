@@ -2,24 +2,24 @@ package event
 
 // ChannelEventLog is the CEL event structure
 type ChannelEventLog struct {
-	EventName     string `AMI:"EventName"`
-	AccountCode   string `AMI:"AccountCode"`
-	CallerIDnum   string `AMI:"CallerIDnum"`
-	CallerIDname  string `AMI:"CallerIDname"`
-	CallerIDani   string `AMI:"CallerIDani"`
-	CallerIDrdnis string `AMI:"CallerIDrdnis"`
-	CallerIDdnid  string `AMI:"CallerIDdnid"`
+	EventName     string `AMI:"Eventname"`
+	AccountCode   string `AMI:"Accountcode"`
+	CallerIDnum   string `AMI:"Calleridnum"`
+	CallerIDname  string `AMI:"Calleridname"`
+	CallerIDani   string `AMI:"Calleridani"`
+	CallerIDrdnis string `AMI:"Calleridrdnis"`
+	CallerIDdnid  string `AMI:"Calleriddnid"`
 	Exten         string `AMI:"Exten"`
 	Context       string `AMI:"Context"`
 	Application   string `AMI:"Application"`
-	AppData       string `AMI:"AppData"`
-	EventTime     string `AMI:"EventTime"`
-	AMAFlags      int64  `AMI:"AMAFlags"`
-	UniqueID      string `AMI:"UniqueID"`
-	LinkedID      string `AMI:"LinkedID"`
-	UserField     string `AMI:"UserField"`
+	AppData       string `AMI:"Appdata"`
+	EventTime     string `AMI:"Eventtime"`
+	AMAFlags      int64  `AMI:"Amaflags"`
+	UniqueID      string `AMI:"Uniqueid"`
+	LinkedID      string `AMI:"Linkedid"`
+	UserField     string `AMI:"Userfield"`
 	Peer          string `AMI:"Peer"`
-	PeerAccount   string `AMI:"PeerAccount"`
+	PeerAccount   string `AMI:"Peeraccount"`
 	Extra         string `AMI:"Extra"`
 }
 

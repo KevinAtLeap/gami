@@ -7,7 +7,9 @@ import (
 )
 
 func TestChannelEventLog(t *testing.T) {
-	fixture := map[string]string{}
+	fixture := map[string]string{
+		"Eventname": "EventName",
+	}
 
 	ev := gami.AMIEvent{
 		ID:     "CEL",
