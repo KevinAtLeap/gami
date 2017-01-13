@@ -80,7 +80,7 @@ const responseChanGamiID = "gamigeneral"
 
 var errNotEvent = errors.New("Not Event")
 
-// Raise when not response expected protocol AMI
+// ErrNotAMI indicates that the connection established is not to an Asterisk AMI service
 var ErrNotAMI = errors.New("Server not AMI interface")
 
 // Params for the actions
@@ -89,7 +89,7 @@ type Params map[string]string
 // AMIClient a connection to AMI server
 type AMIClient struct {
 	conn             *textproto.Conn
-	connRaw          io.ReadWriteCloser
+	Conn             io.ReadWriteCloser
 	mutexAsyncAction *sync.RWMutex
 
 	address     string
@@ -134,10 +134,14 @@ type AMIEvent struct {
 	Params map[string]string
 }
 
+// UseTLS configures the AMIClient to use TLS -- DO NOT USE
+// FIXME:  this function is pointless; this should be supplied as a part of the AMI config
 func UseTLS(c *AMIClient) {
 	c.useTLS = true
 }
 
+// UseTLSConfig configures the AMIClient to use the given TLS Config -- DO NOT USE
+// FIXME:  this function is pointless; this should be supplied as a part of the AMI config
 func UseTLSConfig(config *tls.Config) func(*AMIClient) {
 	return func(c *AMIClient) {
 		c.tlsConfig = config
@@ -145,6 +149,8 @@ func UseTLSConfig(config *tls.Config) func(*AMIClient) {
 	}
 }
 
+// UnsecureTLS configures the AMIClient that it should ignore certificate errors when connecting via TLS -- DO NOT USE
+// FIXME:  this function is pointless; this should be supplied as a part of the AMI config
 func UnsecureTLS(c *AMIClient) {
 	c.unsecureTLS = true
 }
@@ -167,8 +173,12 @@ func (client *AMIClient) Login(username, password string) error {
 
 // Reconnect the session, autologin if a new network error it put on client.NetError
 func (client *AMIClient) Reconnect() error {
+	if client.address == "" {
+		return fmt.Errorf("Cannot reconnect without a dialed address")
+	}
+
 	client.conn.Close()
-	err := client.NewConn()
+	err := client.amiConn()
 
 	if err != nil {
 		client.NetError <- err
@@ -264,7 +274,7 @@ func (client *AMIClient) Run() {
 // Close the connection to AMI
 func (client *AMIClient) Close() {
 	client.Action("Logoff", nil)
-	(client.connRaw).Close()
+	client.Conn.Close()
 }
 
 func (client *AMIClient) notifyResponse(response *AMIResponse) {
@@ -309,51 +319,78 @@ func newEvent(data *textproto.MIMEHeader) (*AMIEvent, error) {
 	return ev, nil
 }
 
+// init creates any required datastructures for an AMIClient
+func (client *AMIClient) init() {
+	client.mutexAsyncAction = new(sync.RWMutex)
+	client.waitNewConnection = make(chan struct{})
+	client.response = make(map[string]chan *AMIResponse)
+	client.Events = make(chan *AMIEvent, 100)
+	client.Error = make(chan error, 1)
+	client.NetError = make(chan error, 1)
+	client.tlsConfig = new(tls.Config)
+}
+
 // Dial create a new connection to AMI
-func Dial(address string, options ...func(*AMIClient)) (*AMIClient, error) {
-	client := &AMIClient{
-		address:           address,
-		amiUser:           "",
-		amiPass:           "",
-		mutexAsyncAction:  new(sync.RWMutex),
-		waitNewConnection: make(chan struct{}),
-		response:          make(map[string]chan *AMIResponse),
-		Events:            make(chan *AMIEvent, 100),
-		Error:             make(chan error, 1),
-		NetError:          make(chan error, 1),
-		useTLS:            false,
-		unsecureTLS:       false,
-		tlsConfig:         new(tls.Config),
+func Dial(addr string, options ...func(*AMIClient)) (*AMIClient, error) {
+	var err error
+	c := AMIClient{
+		address: addr,
 	}
+	c.init()
 	for _, op := range options {
-		op(client)
+		op(&c)
 	}
-	err := client.NewConn()
+
+	// Dial the connection
+	if c.useTLS {
+		c.tlsConfig.InsecureSkipVerify = c.unsecureTLS
+		c.Conn, err = tls.Dial("tcp", c.address, c.tlsConfig)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		c.Conn, err = net.Dial("tcp", c.address)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Apply the codec
+	err = c.amiConn()
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
+	return &c, nil
 }
 
-// NewConn create a new connection to AMI
-func (client *AMIClient) NewConn() (err error) {
-	if client.useTLS {
-		client.tlsConfig.InsecureSkipVerify = client.unsecureTLS
-		client.connRaw, err = tls.Dial("tcp", client.address, client.tlsConfig)
-	} else {
-		client.connRaw, err = net.Dial("tcp", client.address)
+// NewFromRWC takes an existing ReadWriteCloser and uses it as the connection for AMI
+func NewFromRWC(conn io.ReadWriteCloser, options ...func(*AMIClient)) (*AMIClient, error) {
+	c := AMIClient{
+		Conn: conn,
+	}
+	c.init()
+	for _, op := range options {
+		op(&c)
 	}
 
+	// Create the new textproto.Conn from the ReadWriteCloser
+	err := c.amiConn()
 	if err != nil {
-		return err
+		return nil, err
 	}
+	return &c, nil
+}
 
-	client.conn = textproto.NewConn(client.connRaw)
+// amiConn creates a new MIME-like (textproto) connection
+func (client *AMIClient) amiConn() (err error) {
+	// Wrap the main RWC "conn"
+	client.conn = textproto.NewConn(client.Conn)
+
+	// Check that we are really connected to an AMI service
 	label, err := client.conn.ReadLine()
 	if err != nil {
 		return err
 	}
-
 	if strings.Contains(label, "Asterisk Call Manager") != true {
 		return ErrNotAMI
 	}
