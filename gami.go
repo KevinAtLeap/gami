@@ -135,13 +135,11 @@ type AMIEvent struct {
 }
 
 // UseTLS configures the AMIClient to use TLS -- DO NOT USE
-// FIXME:  this function is pointless; this should be supplied as a part of the AMI config
 func UseTLS(c *AMIClient) {
 	c.useTLS = true
 }
 
 // UseTLSConfig configures the AMIClient to use the given TLS Config -- DO NOT USE
-// FIXME:  this function is pointless; this should be supplied as a part of the AMI config
 func UseTLSConfig(config *tls.Config) func(*AMIClient) {
 	return func(c *AMIClient) {
 		c.tlsConfig = config
@@ -150,7 +148,6 @@ func UseTLSConfig(config *tls.Config) func(*AMIClient) {
 }
 
 // UnsecureTLS configures the AMIClient that it should ignore certificate errors when connecting via TLS -- DO NOT USE
-// FIXME:  this function is pointless; this should be supplied as a part of the AMI config
 func UnsecureTLS(c *AMIClient) {
 	c.unsecureTLS = true
 }
@@ -333,12 +330,12 @@ func (client *AMIClient) init() {
 // Dial create a new connection to AMI
 func Dial(addr string, options ...func(*AMIClient)) (*AMIClient, error) {
 	var err error
-	c := AMIClient{
+	c := &AMIClient{
 		address: addr,
 	}
 	c.init()
 	for _, op := range options {
-		op(&c)
+		op(c)
 	}
 
 	// Dial the connection
@@ -360,17 +357,17 @@ func Dial(addr string, options ...func(*AMIClient)) (*AMIClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &c, nil
+	return c, nil
 }
 
 // NewFromRWC takes an existing ReadWriteCloser and uses it as the connection for AMI
 func NewFromRWC(conn io.ReadWriteCloser, options ...func(*AMIClient)) (*AMIClient, error) {
-	c := AMIClient{
+	c := &AMIClient{
 		Conn: conn,
 	}
 	c.init()
 	for _, op := range options {
-		op(&c)
+		op(c)
 	}
 
 	// Create the new textproto.Conn from the ReadWriteCloser
@@ -378,7 +375,7 @@ func NewFromRWC(conn io.ReadWriteCloser, options ...func(*AMIClient)) (*AMIClien
 	if err != nil {
 		return nil, err
 	}
-	return &c, nil
+	return c, nil
 }
 
 // amiConn creates a new MIME-like (textproto) connection
