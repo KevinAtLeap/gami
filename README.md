@@ -1,9 +1,9 @@
 GAMI
 ====
 
-GO - Asterisk AMI Interface
+Go - Asterisk AMI library
 
-communicate with the  Asterisk AMI, Actions and Events.
+communicate with the Asterisk Manager Interface (AMI) using Actions and Events.
 
 Example connecting to Asterisk and Send Action get Events.
 
@@ -11,8 +11,8 @@ Example connecting to Asterisk and Send Action get Events.
 package main
 import (
 	"log"
-	"github.com/bit4bit/gami"
-	"github.com/bit4bit/gami/event"
+	"github.com/CyCoreSystems/gami"
+	"github.com/CyCoreSystems/gami/event"
 )
 
 func main() {
@@ -95,7 +95,7 @@ CURRENT EVENT TYPES
 
 The events use documentation and struct from *PAMI*.
 
-use **bit4bit/gami/event.New()** for get this struct from raw event
+use **CyCoreSystems/gami/event.New()** for get this struct from raw event
 
 EVENT ID          | TYPE TEST  
 ----------------  | ---------- 
