@@ -386,5 +386,14 @@ func (client *AMIClient) amiConn() (err error) {
 	// Wrap the main RWC "conn"
 	client.conn = textproto.NewConn(client.Conn)
 
+	// Check that we are really connected to an AMI service
+	label, err := client.conn.ReadLine()
+	if err != nil {
+		return err
+	}
+	if strings.Contains(label, "Asterisk Call Manager") != true {
+		return ErrNotAMI
+	}
+
 	return nil
 }
