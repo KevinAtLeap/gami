@@ -13,7 +13,7 @@ import (
 
 type amiMockAction func(params textproto.MIMEHeader) map[string]string
 
-//amiServer for mocking Asterisk AMI
+// amiServer for mocking Asterisk AMI
 type amiServer struct {
 	Addr          string
 	actionsMocked map[string]amiMockAction
@@ -116,7 +116,7 @@ func newAmiServer() *amiServer {
 	return srv
 }
 
-//Mock
+// Mock
 func (c *amiServer) Mock(action string, cb amiMockAction) {
 	c.actionsMocked[action] = cb
 }

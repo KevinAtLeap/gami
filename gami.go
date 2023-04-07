@@ -284,7 +284,7 @@ func (client *AMIClient) notifyResponse(response *AMIResponse) {
 	}()
 }
 
-//newResponse build a response for action
+// newResponse build a response for action
 func newResponse(data *textproto.MIMEHeader) (*AMIResponse, error) {
 	if data.Get("Response") == "" {
 		return nil, errors.New("Not Response")
@@ -301,7 +301,7 @@ func newResponse(data *textproto.MIMEHeader) (*AMIResponse, error) {
 	return response, nil
 }
 
-//newEvent build event
+// newEvent build event
 func newEvent(data *textproto.MIMEHeader) (*AMIEvent, error) {
 	if data.Get("Event") == "" {
 		return nil, errNotEvent
